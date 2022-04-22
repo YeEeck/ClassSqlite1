@@ -2,7 +2,10 @@ package com.yeck.classsqlite1;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
+import android.database.ContentObserver;
+import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.TextView;
@@ -12,7 +15,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 public class MainActivity extends AppCompatActivity {
     TextView textViewName, textViewPhoneNumber, textViewAddress;
-
+    Uri uri;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -20,6 +23,8 @@ public class MainActivity extends AppCompatActivity {
         textViewName = findViewById(R.id.textViewName);
         textViewAddress = findViewById(R.id.textViewAddress);
         textViewPhoneNumber = findViewById(R.id.textViewPhoneNumber);
+        uri = Uri.parse("content://com.yeck.classsqlite1.provider");
+        getContentResolver().registerContentObserver(uri, true, new MyContentObselver(new Handler()));
     }
 
     public void addBtnClicked(View view) {
@@ -32,6 +37,9 @@ public class MainActivity extends AppCompatActivity {
             user.phoneNumber = textViewPhoneNumber.getText().toString();
             UserDatabase.getInstance(MainActivity.this).getUserDao().insert(user);
             Toast.makeText(MainActivity.this, "已添加", Toast.LENGTH_SHORT).show();
+            getContentResolver().notifyChange(uri, null);
+
+
         }
         HideKeyboard();
     }
@@ -46,6 +54,7 @@ public class MainActivity extends AppCompatActivity {
             user.phoneNumber = textViewPhoneNumber.getText().toString();
             UserDatabase.getInstance(MainActivity.this).getUserDao().update(user);
             Toast.makeText(MainActivity.this, "已更新", Toast.LENGTH_SHORT).show();
+            getContentResolver().notifyChange(uri, null);
         }
         HideKeyboard();
     }
@@ -62,6 +71,7 @@ public class MainActivity extends AppCompatActivity {
             user.phoneNumber = textViewPhoneNumber.getText().toString();
             UserDatabase.getInstance(MainActivity.this).getUserDao().delete(user);
             Toast.makeText(MainActivity.this, "已删除", Toast.LENGTH_SHORT).show();
+            getContentResolver().notifyChange(uri, null);
         }
         HideKeyboard();
     }
@@ -96,5 +106,17 @@ public class MainActivity extends AppCompatActivity {
         inputMethodManager.hideSoftInputFromWindow(MainActivity.this.getCurrentFocus().getWindowToken(),
 
                 InputMethodManager.HIDE_NOT_ALWAYS);
+    }
+
+    class MyContentObselver extends ContentObserver {
+        public MyContentObselver(Handler handler) {
+            super(handler);
+        }
+
+        @Override
+        public void onChange(boolean selfChange) {
+            super.onChange(selfChange);
+            Toast.makeText(MainActivity.this, "Data changed!", Toast.LENGTH_LONG).show();
+        }
     }
 }
